@@ -1,12 +1,17 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using System.Threading.Tasks;
+using Microsoft.AspNetCore.SignalR;
 
-namespace SignalRProject.Hubs
+public class TASSignalRHub : Hub
 {
-    public class TASSignalRHub : Hub
+    public async Task SubscribeTAS(string instrumentId, string clientId)
     {
-        public async Task SendMessage(string user, string message)
-        {
-            await Clients.All.SendAsync("ReceiveMessage", user, message);
-        }
+        await Groups.AddToGroupAsync(Context.ConnectionId, instrumentId);
+        await Clients.Group(instrumentId).SendAsync("OnUpdate", $"Subscribed to instrument {instrumentId} for client {clientId}");
+    }
+
+    public async Task UnsubscribeTAS(string instrumentId, string clientId)
+    {
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, instrumentId);
+        await Clients.Group(instrumentId).SendAsync("OnUpdate", $"Unsubscribed from instrument {instrumentId} for client {clientId}");
     }
 }
